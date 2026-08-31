@@ -1,0 +1,46 @@
+# --- Raw and derived data: never versioned ---------------------------------
+# Source CSVs from the TCE-ES portal (~13 GB) and every layer output stay out
+# of git. See README "Data is not in this repository" for how to obtain them.
+/data/
+*.zip
+*.csv
+*.parquet
+*.orc
+_delta_log/
+
+# The committed sample is the one exception: it is what makes the repo
+# runnable without downloading 13 GB.
+!/sample/*.csv
+!/sample/**/*.csv
+
+# --- Python ----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# --- Spark -----------------------------------------------------------------
+spark-warehouse/
+metastore_db/
+derby.log
+
+# --- Airflow ---------------------------------------------------------------
+airflow.db
+airflow-webserver.pid
+logs/
+standalone_admin_password.txt
+
+# --- Tooling / OS ----------------------------------------------------------
+.env
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# --- Build brief -----------------------------------------------------------
+# Internal, Portuguese-language build brief. Kept local: it documents portfolio
+# strategy and time budget, which is not what this public repo is about.
+/CLAUDE.md
