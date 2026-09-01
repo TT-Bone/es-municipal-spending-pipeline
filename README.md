@@ -64,8 +64,12 @@ mount is markedly slower.
 |---|---|
 | OS | Ubuntu 22.04 (WSL2 on Windows 11) |
 | Python | 3.10.12 |
-| Spark | to be pinned when the Bronze layer lands |
-| Java | to be pinned when the Bronze layer lands |
+| Java | OpenJDK 17.0.20 |
+| Spark | 3.5.9 (Scala 2.12.18) |
+
+Under WSL2 the hostname resolves to a loopback address, and Spark then binds to
+the interop interface and warns on every start. Exporting `SPARK_LOCAL_IP=127.0.0.1`
+before running the pipeline keeps it on localhost and silences the warning.
 
 ## Data is not in this repository
 
