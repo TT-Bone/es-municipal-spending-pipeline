@@ -1,0 +1,20 @@
+[project]
+name = "es-empenhos"
+version = "0.1.0"
+description = "Medallion pipeline over TCE-ES municipal budget commitments"
+requires-python = ">=3.10"
+dependencies = [
+    "pyspark==3.5.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.3.3",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"

@@ -29,7 +29,7 @@ Medallion layering, with provider isolation established before Bronze.
 
 | Layer | Responsibility | Status |
 |---|---|---|
-| Bronze | Raw ingestion, no content transformation. Partitioned by provider (municipality) and year. Carries provenance: source file, ingestion timestamp. | Planned |
+| Bronze | Raw ingestion, no content transformation. Partitioned by provider (municipality) and year. Carries provenance: source file, ingestion timestamp. | Done |
 | Silver | Typing, cleaning, and reconciliation of the 2020–2023 and 2024+ schemas. Brazilian decimals and CP1252 encoding normalised. | Planned |
 | Gold | Business-ready aggregates answering named questions (below). | Planned |
 
@@ -47,7 +47,7 @@ An architecture diagram is added once the layers are implemented.
 
 | Component | Role | Status |
 |---|---|---|
-| PySpark | Layer transformations | Planned |
+| PySpark | Layer transformations | Bronze done, Silver/Gold planned |
 | Apache Airflow | Single end-to-end DAG, Bronze → Silver → Gold | Planned |
 | Docker Compose | One-command local stack | Planned |
 | Custom PySpark checks | Data quality, one per layer | Planned |
@@ -82,8 +82,19 @@ To obtain the data, download the *Empenhos Municipais* CSVs for the years you
 want from `dados.es.gov.br` and place them in `data/raw/`. The portal has no
 active CKAN datastore, so there is no query API to script against.
 
-A small committed sample under `sample/` will let the pipeline run end to end
-without the full download.
+A small committed sample under `sample/` lets the pipeline run end to end
+without the full download: ~3,200 rows for one municipality (the smallest in
+the state), across 2023 and 2024, enough to exercise both source schemas and
+the 3-vs-5-part split.
+
+Run the Bronze ingestion with:
+
+```bash
+python -m es_empenhos.bronze.ingest --raw-dir sample --output-dir data/lake/bronze/empenhos
+```
+
+Drop `--raw-dir sample` (defaults to `data/raw`) once the full CSVs are
+downloaded.
 
 ## Repository layout
 

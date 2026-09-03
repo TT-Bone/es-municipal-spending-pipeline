@@ -39,6 +39,7 @@ standalone_admin_password.txt
 Thumbs.db
 .idea/
 .vscode/
+.claude/
 
 # --- Build brief -----------------------------------------------------------
 # Internal, Portuguese-language build brief. Kept local: it documents portfolio

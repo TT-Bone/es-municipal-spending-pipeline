@@ -1,0 +1,59 @@
+Campo;Descrição
+AnoReferencia;Ano de referência dos dados de empenho.
+MesReferencia;Mês de referência dos dados de empenho.
+NumeroEmpenho;Número do Empenho.
+AnoEmpenho;Ano do Empenho.
+AnoCompetencia;Refere-se ao ano civil em que a despesa foi contabilmente registrada.
+DataEmissao;Data da emissão.
+NomeCredorFornecedor;Nome do credor/fornecedor.
+CodigoCredorFornecedor;Código do credor/fornecedor.
+NomeIdentificacao;Nome da identificação.
+CodigoUnidadeGestora;Código da unidade gestora responsável pelos empenhos.
+UnidadeGestora;Nome da unidade gestora responsável pelos empenhos.
+EsferaAdministrativa;Esfera administrativa da unidade gestora.
+CodigoOrgao;Código do órgão.
+NomeOrgao;Nome do órgão.
+CodigoUnidadeOrcamentaria;Código da unidade orçamentária.
+NomeUnidadeOrcamentaria;Menor nível da classificação institucional. É a destinatária das dotações do orçamento.
+CodigoFuncao;Código da Função.
+DescricaoFuncao;Descrição da Função.
+CodigoSubFuncao;Código da Subfunção.
+DescricaoSubFuncao;Descrição da Subfunção.
+CodigoPrograma;Código do programa.
+NomePrograma;Instrumento de organização da atuação governamental. Articula um conjunto de ações que concorrem à concretização dos objetivos pretendidos.
+CodigoAcao;Código da ação.
+NomeAcao;Instrumento que contribui para atender ao objetivo de um programa, podendo ser projeto, atividade ou operação especial.
+CodigoCompleto;Código completo.
+CodigoCategoria;Código da categoria.
+DescricaoCategoria;Agrupamento da receita por categorias, como Receita Corrente e Receita de Capital.
+CodigoGrupoNatureza;Código do grupo da natureza.
+DescricaoGrupoNatureza;Agregação de elementos de despesa de mesmas características quanto ao objeto de gasto.
+CodigoModalidade;Código da modalidade.
+DescricaoModalidade;Modalidade da licitação.
+CodigoElemento;Código do elemento.
+DescricaoElemento;Classificação que tem por finalidade identificar os objetos de gastos de cada grupo de despesa, tais como vencimentos e vantagens fixas, juros, diárias, material de consumo, obras e instalações, amortização e outros.
+CodigoSubElemento;Código do sub elemento.
+DescricaoSubElemento;Detalhamento para atendimento das necessidades de escrituração contábil e controle da execução orçamentária.
+CodigoGrupoFonte;Código do grupo da fonte.
+NomeGrupoFonte;Controla se a fonte de recursos é do exercício corrente ou de exercícios anteriores.
+CodigoFonteReduzida;Código da fonte reduzida.
+NomeFonteReduzida;Detalhamento da fonte de recursos, conforme convênios ou outros instrumentos congêneres firmados.
+CodigoDetalhamento;Código do detalhamento.
+NomeDetalhamento;Detalhamento da fonte de recursos, conforme convênios ou outros instrumentos congêneres firmados.
+CodigoComplementoFontesDestinacoesRecursos;Código do complemento de fontes / destinações de recursos.
+Empenhada;Valor do crédito orçamentário ou adicional utilizado para fazer face a compromisso assumido.
+Liquidada;Segundo estágio da despesa orçamentária. Normalmente é processada pelas Unidades Executoras ao receberem o objeto do empenho (material, serviço, bem ou obra).
+Paga;Terceiro estágio da despesa orçamentária e será processada pela Unidade Gestora Executora no momento da emissão dos documentos comprobatórios.
+RPNPExercicio;Despesas empenhadas, mas não liquidadas até 31/12. São restos a pagar inscritos no exercício de referência.
+RPPExercicio;Despesas empenhadas e liquidadas (serviço prestado ou bem entregue), mas não pagas até 31/12. São restos a pagar inscritos no exercício de referência.
+RPNPTransferido;Despesas empenhadas, mas não liquidadas até 31/12. Dependem de comprovação futura da liquidação. Transferido: Refere-se à transição do empenho do ano de sua emissão para o exercício financeiro seguinte (inscrição). O empenho garante o orçamento no exercício atual e o financeiro no seguinte.
+RPPTransferido;Despesas empenhadas e liquidadas (serviço prestado ou bem entregue), mas não pagas até 31/12. Transferido: Refere-se à transição do empenho do ano de sua emissão para o exercício financeiro seguinte (inscrição). O empenho garante o orçamento no exercício atual e o financeiro no seguinte.
+RPNPBloqueado;Despesas empenhadas, mas não liquidadas até 31/12. Dependem de comprovação futura da liquidação. Bloqueado: Teve sua execução financeira suspensa temporariamente, impedindo o pagamento mesmo que o serviço seja concluído.
+RPNPLiquidado;Despesas empenhadas, mas não liquidadas até 31/12. Dependem de comprovação futura da liquidação. Liquidado: RP que passaram pela fase de liquidação (verificação do direito do credor).
+RPNPPago;Despesas empenhadas, mas não liquidadas até 31/12. Dependem de comprovação futura da liquidação. RP que receberam o pagamento financeiro. Pago: RP que receberam o pagamento financeiro.
+RPPPago;Despesas empenhadas e liquidadas (serviço prestado ou bem entregue), mas não pagas até 31/12. Pago: RP que receberam o pagamento financeiro. Pago: RP que receberam o pagamento financeiro.
+RPNPCancelado;Despesas empenhadas, mas não liquidadas até 31/12. Dependem de comprovação futura da liquidação. Cancelado: Restos a pagar anulados.
+RPPCancelado;Despesas empenhadas e liquidadas (serviço prestado ou bem entregue), mas não pagas até 31/12. Cancelado: Restos a pagar anulados.
+RPNPRecebido;Despesas empenhadas, mas não liquidadas até 31/12. Dependem de comprovação futura da liquidação. Recebido: Ocorre quando um RP de um exercício anterior é, após análise, reconhecido e restabelecido, voltando a fazer parte dos passivos exigíveis do ente (normalmente após ter sido cancelado indevidamente).
+RPNPRestabelecido;Despesas empenhadas, mas não liquidadas até 31/12. Dependem de comprovação futura da liquidação. Restabelecido:  Reabertura de uma despesa que foi indevidamente cancelada ou anulada, devolvendo-a à condição de restos a pagar.
+RPPRecebido;Despesas empenhadas e liquidadas (serviço prestado ou bem entregue), mas não pagas até 31/12. Recebido: Ocorre quando um RP de um exercício anterior é, após análise, reconhecido e restabelecido, voltando a fazer parte dos passivos exigíveis do ente (normalmente após ter sido cancelado indevidamente).
