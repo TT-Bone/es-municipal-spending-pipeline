@@ -69,9 +69,17 @@ def read_bronze(spark: SparkSession, bronze_dir: Path) -> DataFrame:
 
 def reconcile_schema(df: DataFrame) -> DataFrame:
     """Coalesce each legacy/current column pair produced by mergeSchema and
-    drop the legacy name."""
+    drop the legacy name.
+
+    Guards on column presence because mergeSchema only produces both names
+    of a pair when the Bronze input spans both eras; running Silver over a
+    single year (only 2023 or only 2024) leaves one side absent.
+    """
     for legacy, current in LEGACY_TO_CURRENT_COLUMNS.items():
-        df = df.withColumn(current, F.coalesce(F.col(current), F.col(legacy))).drop(legacy)
+        if legacy in df.columns and current in df.columns:
+            df = df.withColumn(current, F.coalesce(F.col(current), F.col(legacy))).drop(legacy)
+        elif legacy in df.columns:
+            df = df.withColumnRenamed(legacy, current)
     return df
 
 

@@ -38,6 +38,16 @@ def test_reconcile_schema_coalesces_legacy_and_current_columns(spark):
     assert {row.MesReferencia for row in result} == {"6", "6"}
 
 
+def test_reconcile_schema_handles_single_year_input(spark):
+    # A Silver run over only 2023 (or only 2024) Bronze output never gets the
+    # other era's column from mergeSchema, so it must not be required.
+    legacy_only = spark.createDataFrame([Row(Ano="2023", Mes="6")])
+    current_only = spark.createDataFrame([Row(AnoReferencia="2024", MesReferencia="6")])
+
+    assert reconcile_schema(legacy_only).columns == ["AnoReferencia", "MesReferencia"]
+    assert reconcile_schema(current_only).columns == ["AnoReferencia", "MesReferencia"]
+
+
 def test_rename_municipality_column(spark):
     df = spark.createDataFrame([Row(EsferaAdministrativa="Vitória")])
 

@@ -30,7 +30,7 @@ Medallion layering, with provider isolation established before Bronze.
 | Layer | Responsibility | Status |
 |---|---|---|
 | Bronze | Raw ingestion, no content transformation. Partitioned by provider (municipality) and year. Carries provenance: source file, ingestion timestamp. | Done |
-| Silver | Typing, cleaning, and reconciliation of the 2020–2023 and 2024+ schemas. Brazilian decimals and CP1252 encoding normalised. | Planned |
+| Silver | Typing, cleaning, and reconciliation of the 2023 and 2024+ schemas. Brazilian decimals and dates parsed, exact 2024 duplicates dropped, rows with no municipality routed to an explicit `_unknown` partition. | Done |
 | Gold | Business-ready aggregates answering named questions (below). | Planned |
 
 An architecture diagram is added once the layers are implemented.
@@ -47,7 +47,7 @@ An architecture diagram is added once the layers are implemented.
 
 | Component | Role | Status |
 |---|---|---|
-| PySpark | Layer transformations | Bronze done, Silver/Gold planned |
+| PySpark | Layer transformations | Bronze and Silver done, Gold planned |
 | Apache Airflow | Single end-to-end DAG, Bronze → Silver → Gold | Planned |
 | Docker Compose | One-command local stack | Planned |
 | Custom PySpark checks | Data quality, one per layer | Planned |
@@ -95,6 +95,12 @@ python -m es_empenhos.bronze.ingest --raw-dir sample --output-dir data/lake/bron
 
 Drop `--raw-dir sample` (defaults to `data/raw`) once the full CSVs are
 downloaded.
+
+Then run the Silver transformation on the Bronze output:
+
+```bash
+python -m es_empenhos.silver.transform --bronze-dir data/lake/bronze/empenhos --output-dir data/lake/silver/empenhos
+```
 
 ## Repository layout
 
