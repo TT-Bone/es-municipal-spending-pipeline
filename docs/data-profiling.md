@@ -64,9 +64,34 @@ table is the core job of the Silver layer.
 
 ## Provider identity (tenancy key)
 
-- **78 distinct municipalities** appear in the data — the full set of
-  municipalities in Espírito Santo. Counted as distinct values across all three
-  2020 parts, after discarding the repeated header and one malformed row.
+- **Confirmed against the full 2023+2024 Bronze output** (not just the sample):
+  `EsferaAdministrativa` has 79 distinct values — the 78 official Espírito
+  Santo municipalities, spelled consistently with no casing or accent
+  variants, plus one `null`. The tenancy-per-provider angle holds: this
+  column is a clean municipality key.
+- **The `null` value is 1,094 malformed rows, 2023 only.** In each, the row
+  has shifted left by one field: `CodigoUnidadeGestora` (first column) holds
+  the literal string `"CNPJ"` — the value that belongs in the *last* column,
+  `NomeIdentificacao` — and `UnidadeGestora`, `CodigoOrgao`, `NomeOrgao` are
+  also `null`. Distribution: part 1 (387 rows), part 2 (485), part 3 (222);
+  zero in 2024. Volume is negligible (0.019% of 5,655,253 total rows) and
+  immaterial to any aggregate in the Gold layer.
+  The Bronze reader already runs with `multiLine=True` (see
+  `bronze/ingest.py`), so a plain embedded line break inside a quoted field
+  is already handled correctly and is not the cause. The defect surviving
+  `multiLine=True` points instead to **unbalanced or malformed quote
+  characters** in the source row — consistent with the quoting being
+  "applied to text fields only, inconsistently" (see Parsing rules above),
+  which can desynchronize the parser's quote state regardless of line
+  handling. A companion count of rows with a valid municipality but a `null`
+  in the *last* column (the mirror-image symptom of the same shift) came
+  back close in order of magnitude (1,165) but not a clean 1:1 pairing, and
+  those 1,094 tail rows collapse to only 148 distinct rows under exact
+  duplication — an unmapped replication pattern, left uninvestigated since it
+  doesn't change the decision below.
+  **Decision:** the Bronze keeps these rows as-is (they are evidence of a
+  real source defect). The Silver isolates them into an explicitly named
+  `_unknown` partition instead of silently dropping them.
 - The municipality name is carried in the column named **`EsferaAdministrativa`**.
   This contradicts the official data dictionary, which describes that field as
   "administrative sphere of the managing unit". The observed values are plain
@@ -89,6 +114,28 @@ computable directly from the source:
   `RPNPPago`, `RPPPago`, `RPNPCancelado`, `RPPCancelado`, `RPNPRecebido`,
   `RPNPRestabelecido`, `RPPRecebido`
 
+## Row grain
+
+A single `empenho` (identified by `CodigoUnidadeGestora` + `NumeroEmpenho` +
+`AnoEmpenho`) recurs across many rows within a year. This is not duplication:
+each row is one month of that empenho's execution. Checked against
+`022E0500002|00000027|2023` (11 rows, one per month in 2023):
+
+| Mes | Empenhada | Liquidada | Paga |
+|---|---|---|---|
+| 1 | 15000,00 | 0,00 | 0,00 |
+| 2 | 0,00 | 628,44 | 162,07 |
+| 3 | 0,00 | 272,52 | 738,89 |
+| ... | 0,00 | ... | ... |
+
+The full committed amount lands in the first month the empenho appears;
+subsequent months record that month's `Liquidada`/`Paga` installment. So the
+natural business key is **`CodigoUnidadeGestora` + `NumeroEmpenho` +
+`AnoEmpenho` + `MesReferencia`**, and it is confirmed unique under that
+definition across all three 2023 sample parts. Negative amounts also occur
+(e.g. `-10212,70`) and are legitimate reversals of a prior month's entry, not
+data errors.
+
 ## Known data quality issues
 
 - At least one row in the 2020 files has the literal value `4` where a
@@ -96,3 +143,18 @@ computable directly from the source:
   inside a quoted field. Row-shape validation is a real check here, not a
   decorative one.
 - Headers repeat once per part file and must be skipped on concatenation.
+- **Exact duplicate rows, 2024 only.** Unlike 2023, the business key above is
+  *not* unique in 2024: the same key repeats with byte-for-byte identical rows
+  (same values in every column, all monetary columns zero, always
+  `MesReferencia = 12`). Example: empenho `022E0700001|00000002|2024|12`
+  appears **38 times**, all identical, all within the single file
+  `municipios-despesas-empenhos-4-2024.csv` (not split across parts — ruled
+  out as a part-overlap artifact). 45 such duplicate groups were found in that
+  one file alone, more in part 5. 2023 has zero exact duplicates across all
+  three parts. This looks like a year-end close artifact on the source side,
+  not a modelling case to preserve.
+  **Decision:** the Silver layer drops exact duplicate rows
+  (`dropDuplicates()` across all columns) before any aggregation. Since the
+  copies carry no new information, this cannot lose real data, and it
+  prevents these zero-value reinforcement rows from being double-counted
+  if a future change makes some column non-zero.
