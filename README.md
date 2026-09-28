@@ -31,7 +31,7 @@ Medallion layering, with provider isolation established before Bronze.
 |---|---|---|
 | Bronze | Raw ingestion, no content transformation. Partitioned by provider (municipality) and year. Carries provenance: source file, ingestion timestamp. | Done |
 | Silver | Typing, cleaning, and reconciliation of the 2023 and 2024+ schemas. Brazilian decimals and dates parsed, exact 2024 duplicates dropped, rows with no municipality routed to an explicit `_unknown` partition. | Done |
-| Gold | Business-ready aggregates answering named questions (below). | Planned |
+| Gold | Business-ready aggregates answering named questions (below). Design notes in [docs/gold-design.md](docs/gold-design.md). | Done (validated on the sample; full-data run pending) |
 
 An architecture diagram is added once the layers are implemented.
 
@@ -47,7 +47,7 @@ An architecture diagram is added once the layers are implemented.
 
 | Component | Role | Status |
 |---|---|---|
-| PySpark | Layer transformations | Bronze and Silver done, Gold planned |
+| PySpark | Layer transformations | Bronze, Silver and Gold done |
 | Apache Airflow | Single end-to-end DAG, Bronze → Silver → Gold | Planned |
 | Docker Compose | One-command local stack | Planned |
 | Custom PySpark checks | Data quality, one per layer | Planned |
@@ -100,6 +100,12 @@ Then run the Silver transformation on the Bronze output:
 
 ```bash
 python -m es_empenhos.silver.transform --bronze-dir data/lake/bronze/empenhos --output-dir data/lake/silver/empenhos
+```
+
+Finally, build the Gold tables from Silver:
+
+```bash
+python -m es_empenhos.gold.aggregate --silver-dir data/lake/silver/empenhos --output-dir data/lake/gold
 ```
 
 ## Repository layout
