@@ -18,6 +18,8 @@ from pyspark.sql import DataFrame, SparkSession, Window
 from pyspark.sql import functions as F
 from pyspark.sql.types import DecimalType
 
+from es_empenhos.quality.checks import check_gold_state_share_sums_to_one
+
 MUNICIPALITY_COLUMN = "NomeMunicipio"
 UNKNOWN_PROVIDER = "_unknown"
 TOP_N_CREDITORS = 10
@@ -156,7 +158,9 @@ def build_gold(df: DataFrame) -> dict[str, DataFrame]:
 
 
 def run(spark: SparkSession, silver_dir: Path, output_dir: Path) -> None:
-    for name, table in build_gold(read_silver(spark, silver_dir)).items():
+    tables = build_gold(read_silver(spark, silver_dir))
+    check_gold_state_share_sums_to_one(tables["spending_by_municipality_year"])
+    for name, table in tables.items():
         table.write.mode("overwrite").parquet(str(output_dir / name))
 
 

@@ -20,6 +20,8 @@ from pathlib import Path
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as F
 
+from es_empenhos.quality.checks import check_bronze_provenance
+
 SOURCE_ENCODING = "windows-1252"
 FIELD_DELIMITER = ";"
 MUNICIPALITY_COLUMN = "EsferaAdministrativa"
@@ -80,6 +82,7 @@ def ingest(spark: SparkSession, raw_dir: Path, output_dir: Path, years: list[str
     ingested_at = datetime.now(timezone.utc)
     for year in years:
         year_df = ingest_year(spark, raw_dir, year, ingested_at)
+        check_bronze_provenance(year_df)
         (
             year_df.write.mode("overwrite")
             .partitionBy(MUNICIPALITY_COLUMN, YEAR_PARTITION_COLUMN)

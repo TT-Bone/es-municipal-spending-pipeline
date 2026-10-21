@@ -14,6 +14,11 @@ from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.types import DecimalType
 
+from es_empenhos.quality.checks import (
+    check_silver_monetary_parse_rate,
+    check_silver_municipality_never_null,
+)
+
 MUNICIPALITY_COLUMN = "EsferaAdministrativa"
 MUNICIPALITY_COLUMN_RENAMED = "NomeMunicipio"
 YEAR_PARTITION_COLUMN = "ano_particao"
@@ -135,6 +140,8 @@ def transform(df: DataFrame) -> DataFrame:
 
 def run(spark: SparkSession, bronze_dir: Path, output_dir: Path) -> None:
     result = transform(read_bronze(spark, bronze_dir))
+    check_silver_municipality_never_null(result)
+    check_silver_monetary_parse_rate(result)
     (
         result.write.mode("overwrite")
         .partitionBy(MUNICIPALITY_COLUMN_RENAMED, YEAR_PARTITION_COLUMN)
