@@ -33,7 +33,23 @@ Medallion layering, with provider isolation established before Bronze.
 | Silver | Typing, cleaning, and reconciliation of the 2023 and 2024+ schemas. Brazilian decimals and dates parsed, exact 2024 duplicates dropped, rows with no municipality routed to an explicit `_unknown` partition. | Done |
 | Gold | Business-ready aggregates answering named questions (below). Design notes in [docs/gold-design.md](docs/gold-design.md). | Done (validated on the sample; full-data run pending) |
 
-An architecture diagram is added once the layers are implemented.
+```mermaid
+flowchart LR
+    RAW["Raw CSVs<br/>TCE-ES, 2023 + 2024<br/>(3 or 5 parts per year)"]
+    BRONZE["Bronze<br/>raw, unchanged content<br/>partitioned by municipality + year<br/>provenance: source file, ingestion time"]
+    SILVER["Silver<br/>2023 and 2024+ schemas reconciled<br/>typed, deduplicated"]
+    G1["Gold: committed spending<br/>per municipality and year"]
+    G2["Gold: carry-over rate<br/>(restos a pagar)"]
+    G3["Gold: supplier concentration"]
+
+    RAW --> BRONZE --> SILVER
+    SILVER --> G1
+    SILVER --> G2
+    SILVER --> G3
+```
+
+The Airflow DAG runs these three layers in order, and each layer has its own
+data quality checks.
 
 ### Questions the Gold layer answers
 
@@ -48,9 +64,10 @@ An architecture diagram is added once the layers are implemented.
 | Component | Role | Status |
 |---|---|---|
 | PySpark | Layer transformations | Bronze, Silver and Gold done |
-| Apache Airflow | Single end-to-end DAG, Bronze → Silver → Gold | Planned |
-| Docker Compose | One-command local stack | Planned |
-| Custom PySpark checks | Data quality, one per layer | Planned |
+| Apache Airflow | Single end-to-end DAG, Bronze → Silver → Gold | Done (`dags/es_empenhos_pipeline.py`) |
+| Docker Compose | One-command local stack (`Dockerfile`, `docker-compose.yml`) | Done |
+| Custom PySpark checks | Data quality, one per layer (`src/es_empenhos/quality/`) | Done |
+| pytest | One test module per layer (`tests/test_bronze.py`, `test_silver.py`, `test_gold.py`) | Done |
 
 Nothing in this table is claimed as working until it is marked otherwise.
 
@@ -107,6 +124,26 @@ Finally, build the Gold tables from Silver:
 ```bash
 python -m es_empenhos.gold.aggregate --silver-dir data/lake/silver/empenhos --output-dir data/lake/gold
 ```
+
+## Run with Docker
+
+One image (Python 3.10, OpenJDK 17, Spark 3.5.9, Airflow 2.10.5) runs the whole stack
+with Airflow in standalone mode. No external services are needed.
+
+```bash
+docker compose up --build
+```
+
+1. Open http://localhost:8080. The login is `admin`; the generated password is printed in
+   the container logs (`docker compose logs airflow | grep -i password`).
+2. Trigger the `es_empenhos_pipeline` DAG (Bronze, then Silver, then Gold).
+
+By default the DAG reads the committed `sample/` CSVs, so it runs without downloading the
+~13 GB source data. To process the full series, place the CSVs in `data/raw/` and start with
+`RAW_DIR=/opt/project/data/raw docker compose up`.
+
+Outputs land on the host under `data/lake/{bronze,silver,gold}/` (git-ignored). `./dags`,
+`./src`, `./data`, `./sample` and `./docs` are bind-mounted, so code edits need no rebuild.
 
 ## Repository layout
 

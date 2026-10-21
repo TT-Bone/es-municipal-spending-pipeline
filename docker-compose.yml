@@ -1,0 +1,42 @@
+# Local stack: one image, Airflow in standalone mode (SQLite metadata DB,
+# webserver + scheduler in one process). No external services.
+services:
+  airflow:
+    build:
+      context: .
+      args:
+        UID: ${AIRFLOW_UID:-1000}
+    image: es-empenhos:local
+    command: airflow standalone
+    ports:
+      - "8080:8080"
+    environment:
+      AIRFLOW_HOME: /opt/airflow
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "false"
+      # Spark binds to loopback only (see README, "Environment").
+      SPARK_LOCAL_IP: 127.0.0.1
+      # Absolute paths for the DAG's Variables (tasks do not run from the repo root).
+      # Defaults to the committed sample; set RAW_DIR=/opt/project/data/raw for the full series.
+      AIRFLOW_VAR_ES_EMPENHOS_RAW_DIR: ${RAW_DIR:-/opt/project/sample}
+      AIRFLOW_VAR_ES_EMPENHOS_BRONZE_DIR: /opt/project/data/lake/bronze/empenhos
+      AIRFLOW_VAR_ES_EMPENHOS_SILVER_DIR: /opt/project/data/lake/silver/empenhos
+      AIRFLOW_VAR_ES_EMPENHOS_GOLD_DIR: /opt/project/data/lake/gold
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/project/src
+      - ./data:/opt/project/data
+      - ./sample:/opt/project/sample:ro
+      - ./docs:/opt/project/docs:ro
+      - airflow-home:/opt/airflow
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    restart: unless-stopped
+
+volumes:
+  airflow-home:

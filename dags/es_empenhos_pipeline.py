@@ -12,9 +12,9 @@ changes.  Each variable falls back to the default local path when absent.
 To trigger manually from the CLI:
     airflow dags trigger es_empenhos_pipeline
 
-To override paths for a single run:
-    airflow dags trigger es_empenhos_pipeline \\
-        --conf '{"years": "2023 2024"}'
+Overrides are set by changing the Airflow Variables (``es_empenhos_raw_dir``,
+``es_empenhos_bronze_dir``, ``es_empenhos_silver_dir``, ``es_empenhos_gold_dir``,
+``es_empenhos_years``); the DAG does not read ``dag_run.conf``.
 """
 
 from datetime import datetime
