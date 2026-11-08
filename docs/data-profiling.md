@@ -150,11 +150,15 @@ data errors.
   appears **38 times**, all identical, all within the single file
   `municipios-despesas-empenhos-4-2024.csv` (not split across parts — ruled
   out as a part-overlap artifact). 45 such duplicate groups were found in that
-  one file alone, more in part 5. 2023 has zero exact duplicates across all
-  three parts. This looks like a year-end close artifact on the source side,
+  one file alone, more in part 5. Among well-formed rows, 2023 has zero exact
+  duplicates across all three parts. The only 2023 repeats are inside the 1,094
+  malformed rows described under *Provider identity*, which collapse to 148
+  distinct rows. This looks like a year-end close artifact on the source side,
   not a modelling case to preserve.
   **Decision:** the Silver layer drops exact duplicate rows
   (`dropDuplicates()` across all columns) before any aggregation. Since the
   copies carry no new information, this cannot lose real data, and it
   prevents these zero-value reinforcement rows from being double-counted
-  if a future change makes some column non-zero.
+  if a future change makes some column non-zero. Because `dropDuplicates()`
+  runs over the whole Silver frame, it also reduces the `_unknown` partition to
+  those 148 distinct malformed rows. Every original copy stays in Bronze.

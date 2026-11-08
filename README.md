@@ -13,7 +13,9 @@ The 78 municipalities reporting to TCE-ES are **independent data providers**.
 They share a submission format but not a schema discipline, a release cadence, or
 a data steward. That makes this a natural fit for **tenancy-per-provider
 ingestion**: each municipality is given isolated custody from the moment the data
-lands, before any conforming happens.
+lands, before any conforming happens. The reasoning behind this custody-first
+pattern is written up in the article
+[Layer 0: Why Our Medallion Architecture Starts Before Bronze](https://www.linkedin.com/pulse/layer-0-why-our-medallion-architecture-starts-before-bronze-lopes-qbxoc).
 
 The source also evolves without notice. In 2024 the file layout gained three
 columns and renamed two, mid-series. Absorbing that break without disturbing
@@ -30,7 +32,7 @@ Medallion layering, with provider isolation established before Bronze.
 | Layer | Responsibility | Status |
 |---|---|---|
 | Bronze | Raw ingestion, no content transformation. Partitioned by provider (municipality) and year. Carries provenance: source file, ingestion timestamp. | Done |
-| Silver | Typing, cleaning, and reconciliation of the 2023 and 2024+ schemas. Brazilian decimals and dates parsed, exact 2024 duplicates dropped, rows with no municipality routed to an explicit `_unknown` partition. | Done |
+| Silver | Typing, cleaning, and reconciliation of the 2023 and 2024+ schemas. Brazilian decimals and dates parsed, exact duplicate rows dropped (a year-end artifact in the 2024 source), and rows with no municipality (1,094 malformed 2023 source rows, 0.019%) routed to an explicit `_unknown` partition instead of being discarded. Bronze keeps every one of those rows as received. | Done |
 | Gold | Business-ready aggregates answering named questions (below). Design notes in [docs/gold-design.md](docs/gold-design.md). | Done |
 
 ```mermaid
@@ -58,6 +60,30 @@ data quality checks.
    committed but left unpaid within the fiscal year. A real fiscal-health signal.
 3. Supplier concentration per municipality — the share of spending going to the
    largest creditors.
+
+### Why Parquet and not Delta Lake
+
+All three layers write plain Parquet. Bronze and Silver are partitioned by
+municipality and year. Delta Lake was considered and left out on purpose:
+
+- **Idempotency is already covered.** Bronze and Silver are full refreshes per
+  partition, written with `spark.sql.sources.partitionOverwriteMode=dynamic`.
+  Re-running a year rewrites only that year's partitions, which is the guarantee
+  `MERGE` or `replaceWhere` would add here. Gold tables are small and rewritten
+  whole.
+- **Schema changes belong in code in a curated layer.** The 2023 → 2024 break is
+  reconciled explicitly in the Silver transform. Write-time schema evolution
+  would absorb a new source column silently, which is the opposite of what
+  Silver is for.
+- **No requirement that pays for the dependency.** There is no concurrent writer,
+  no time-travel need and no row-level update in this pipeline. Delta would add
+  jars to every Spark runtime, the Airflow container included, without adding a
+  guarantee the pipeline uses.
+
+**Known limitation:** dynamic overwrite only touches the partitions present in
+the incoming data. If a municipality-year that existed in a previous run
+produced zero rows on a re-run, its old Silver partition would remain. No check
+covers this yet. A Bronze-vs-Silver partition count would.
 
 ## Stack
 
@@ -88,17 +114,19 @@ Under WSL2 the hostname resolves to a loopback address, and Spark then binds to
 the interop interface and warns on every start. Exporting `SPARK_LOCAL_IP=127.0.0.1`
 before running the pipeline keeps it on localhost and silences the warning.
 
-On the full 2023+2024 input (~13 GB on disk, several GB in memory after parsing)
+On the full 2023+2024 input (~4.4 GB of CSV, 5.66 million rows)
 Spark's default driver heap (~1 GB) will OOM in the Silver stage. Export
 `PYSPARK_SUBMIT_ARGS='--driver-memory 8g --conf spark.driver.maxResultSize=2g pyspark-shell'`
 before running on the full data. The committed `sample/` runs on the default.
 
 ## Data is not in this repository
 
-The source data is roughly 13 GB and is deliberately excluded from version
-control. The pipeline processes **2023 and 2024** — one year of each source
-schema, which is the minimum that exercises the schema reconciliation. Extending
-to further years is a configuration change, since Bronze partitions by year.
+The full source series (2020–2026) is roughly 13 GB and is deliberately excluded
+from version control. The pipeline processes **2023 and 2024**: ~4.4 GB of CSV
+and 5.66 million rows, one year of each source schema, which is the minimum that
+exercises the schema reconciliation. It has been run end to end on that full
+input, not only on the sample. Extending to further years is a configuration
+change, since Bronze partitions by year.
 
 To obtain the data, download the *Empenhos Municipais* CSVs for the years you
 want from `dados.es.gov.br` and place them in `data/raw/`. The portal has no
