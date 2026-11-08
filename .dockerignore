@@ -1,7 +1,6 @@
 .git
 .venv/
 venv/
-.claude/
 .pytest_cache/
 __pycache__/
 *.py[cod]
@@ -13,7 +12,6 @@ metastore_db/
 derby.log
 airflow.db
 .env
-CLAUDE.md
 tests/
 docs/
 sample/

@@ -39,9 +39,6 @@ standalone_admin_password.txt
 Thumbs.db
 .idea/
 .vscode/
-.claude/
 
-# --- Build brief -----------------------------------------------------------
-# Internal, Portuguese-language build brief. Kept local: it documents portfolio
-# strategy and time budget, which is not what this public repo is about.
-/CLAUDE.md
+# --- Data Exploration -------------------------------------------------------
+/exploration
