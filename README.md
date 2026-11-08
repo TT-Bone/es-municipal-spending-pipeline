@@ -31,7 +31,7 @@ Medallion layering, with provider isolation established before Bronze.
 |---|---|---|
 | Bronze | Raw ingestion, no content transformation. Partitioned by provider (municipality) and year. Carries provenance: source file, ingestion timestamp. | Done |
 | Silver | Typing, cleaning, and reconciliation of the 2023 and 2024+ schemas. Brazilian decimals and dates parsed, exact 2024 duplicates dropped, rows with no municipality routed to an explicit `_unknown` partition. | Done |
-| Gold | Business-ready aggregates answering named questions (below). Design notes in [docs/gold-design.md](docs/gold-design.md). | Done (validated on the sample; full-data run pending) |
+| Gold | Business-ready aggregates answering named questions (below). Design notes in [docs/gold-design.md](docs/gold-design.md). | Done |
 
 ```mermaid
 flowchart LR
@@ -63,7 +63,7 @@ data quality checks.
 
 | Component | Role | Status |
 |---|---|---|
-| PySpark | Layer transformations | Bronze, Silver and Gold done |
+| PySpark | Layer transformations | Done |
 | Apache Airflow | Single end-to-end DAG, Bronze → Silver → Gold | Done (`dags/es_empenhos_pipeline.py`) |
 | Docker Compose | One-command local stack (`Dockerfile`, `docker-compose.yml`) | Done |
 | Custom PySpark checks | Data quality, one per layer (`src/es_empenhos/quality/`) | Done |
@@ -87,6 +87,11 @@ mount is markedly slower.
 Under WSL2 the hostname resolves to a loopback address, and Spark then binds to
 the interop interface and warns on every start. Exporting `SPARK_LOCAL_IP=127.0.0.1`
 before running the pipeline keeps it on localhost and silences the warning.
+
+On the full 2023+2024 input (~13 GB on disk, several GB in memory after parsing)
+Spark's default driver heap (~1 GB) will OOM in the Silver stage. Export
+`PYSPARK_SUBMIT_ARGS='--driver-memory 8g --conf spark.driver.maxResultSize=2g pyspark-shell'`
+before running on the full data. The committed `sample/` runs on the default.
 
 ## Data is not in this repository
 

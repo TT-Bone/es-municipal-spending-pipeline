@@ -23,6 +23,7 @@ services:
       AIRFLOW_VAR_ES_EMPENHOS_BRONZE_DIR: /opt/project/data/lake/bronze/empenhos
       AIRFLOW_VAR_ES_EMPENHOS_SILVER_DIR: /opt/project/data/lake/silver/empenhos
       AIRFLOW_VAR_ES_EMPENHOS_GOLD_DIR: /opt/project/data/lake/gold
+      AIRFLOW_VAR_ES_EMPENHOS_YEARS: ${YEARS:-2023 2024}
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/project/src

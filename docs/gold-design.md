@@ -21,17 +21,17 @@ the state's committed total that year) and `rank_in_year`.
 in the reference year itself (`AnoEmpenho = AnoReferencia`). The rate is null,
 not 0, when nothing was committed.
 
-Two decisions, both checked on the development sample:
+Two decisions behind the choice of `(Empenhada − Paga)` as the numerator:
 
 - **Own-year filter.** `Paga` also carries payments of prior-year empenhos
   (e.g. 96,403.46 paid in 2024 against 2023 empenhos). Including them would
   offset the current year's unpaid balance with an unrelated year's payments.
 - **The source's `RPNPExercicio` / `RPPExercicio` are not used.** They appear
-  only in month 12 and capture a tiny fraction of the unpaid balance: 0.00 in
-  2023 against 364,787.92 unpaid, and 3,230.00 in 2024 against 1,524,456.12.
-  They likely reflect only balances formally inscribed as carry-over, which is
-  not the same as "committed and not paid within the year". This was verified on
-  one municipality only; re-check on the full dataset before relying on it.
+  only in month 12. On the full 2023+2024 dataset, their state-wide sum is
+  27.77% of own-year `(Empenhada − Paga)` in 2023 and 99.73% in 2024 — the two
+  years disagree too much for RP to be a reliable definition. Restricting
+  `(Empenhada − Paga)` to the reference year gives one definition that
+  behaves consistently across years.
 
 ## `supplier_concentration_by_municipality_year`
 
@@ -45,8 +45,10 @@ Share of committed spending going to the top 10 creditors (`top_n_share`), plus
   `NomeIdentificacao` starting `INSCRIÇÃO GENÉRICA` are payroll and budget
   lines (e.g. `PESSOAL CIVIL - SAÚDE ...`), not suppliers. Left in, they would
   dominate the top 10 and measure nothing. Their weight is reported as
-  `generic_empenhada` so the exclusion is visible rather than silent; in the
-  sample they are 22–28% of the municipality's spending.
+  `generic_empenhada` so the exclusion is visible rather than silent. The
+  share is highly skewed across the state: state-wide ~6% (2023) and ~11%
+  (2024), but per-municipality it ranges from ~0% to above 40% in both years,
+  with the median near 0.01%.
 - Creditors with non-positive net commitments are dropped from the ranking.
 - Names are matched exactly; the same person spelled differently is counted
   twice. Accepted as a limitation.
